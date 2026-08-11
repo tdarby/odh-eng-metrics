@@ -4,8 +4,7 @@
 
 - **Python 3.12+**
 - **Git** (for bare clones of upstream/downstream repos)
-- **Podman + podman-compose** (for CI Observability stack and Grafana dashboard)
-- **Docker Compose** (for the local Grafana dashboard stack — or Podman with docker-compose compatibility)
+- **Podman + podman-compose** or **Docker + Docker Compose** (for the Grafana dashboard stack)
 
 ### Optional tools
 

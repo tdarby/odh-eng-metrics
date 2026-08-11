@@ -117,7 +117,7 @@ make report
 # Or get JSON output
 python3 cli.py report --json-output
 
-# Launch Grafana dashboards (requires Docker)
+# Launch Grafana dashboards (requires Docker or Podman)
 make dashboard
 # → http://localhost:3001 (admin/admin)
 

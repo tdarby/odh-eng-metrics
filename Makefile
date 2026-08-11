@@ -4,6 +4,9 @@ PYTHON ?= python3
 CLI = $(PYTHON) cli.py
 EXPORTER_PID_FILE = data/.exporter.pid
 
+# Auto-detect podman or docker. Override with: make dashboard COMPOSE="docker compose"
+COMPOSE ?= $(shell command -v podman-compose >/dev/null 2>&1 && echo "podman-compose" || echo "docker compose")
+
 # Path to the openshift-ci-observability checkout.
 # Override via env, local.mk, or: make collect CI_OBS_DIR=/path/to/repo
 CI_OBS_DIR ?= $(HOME)/git/openshift-ci-observability
@@ -80,7 +83,7 @@ dashboard: ## Start Prometheus + Grafana + exporter (all in containers)
 		kill $$(cat $(EXPORTER_PID_FILE)) 2>/dev/null || true; \
 		rm -f $(EXPORTER_PID_FILE); \
 	fi
-	docker compose -f dashboard/docker-compose.yml up -d
+	$(COMPOSE) -f dashboard/docker-compose.yml up -d
 	@echo ""
 	@echo "  Grafana:    http://localhost:3001  (admin/admin)"
 	@echo "  Prometheus: http://localhost:9091"
@@ -88,12 +91,12 @@ dashboard: ## Start Prometheus + Grafana + exporter (all in containers)
 	@echo "  Run 'make dashboard-down' to stop everything."
 	@echo "  Run 'make refresh' after 'make collect' to update dashboards."
 
-dashboard-down: ## Stop the Docker Compose stack
-	docker compose -f dashboard/docker-compose.yml down
+dashboard-down: ## Stop the container stack
+	$(COMPOSE) -f dashboard/docker-compose.yml down
 
 refresh: ensure-ci-obs ## Collect fresh data and restart the exporter so dashboards update immediately
 	$(CLI) collect
-	docker compose -f dashboard/docker-compose.yml restart exporter
+	$(COMPOSE) -f dashboard/docker-compose.yml restart exporter
 	@sleep 3
 	@echo ""
 	@echo "  Data collected and exporter restarted."
