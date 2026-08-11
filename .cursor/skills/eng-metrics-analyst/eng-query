@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""Thin query runner for the odh-eng-metrics SQLite database.
+
+Usage:
+    eng-query status                  # DB summary: table row counts, freshness
+    eng-query tables                  # List all tables
+    eng-query schema [TABLE]          # Show CREATE TABLE for one or all tables
+    eng-query collections             # List JIRA collections with issue counts
+    eng-query sql "SELECT ..."        # Run arbitrary read-only SQL, output JSON lines
+    eng-query sql-csv "SELECT ..."    # Run arbitrary read-only SQL, output CSV
+
+All output is machine-readable (JSON lines for status/tables/schema/collections/sql,
+CSV for sql-csv). The agent should use `sql` for ad-hoc queries.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import json
+import sqlite3
+import sys
+from pathlib import Path
+
+DB_SEARCH_PATHS = [
+    Path(__file__).resolve().parent.parent.parent.parent / "data" / "eng-metrics.sqlite",
+    Path("data/eng-metrics.sqlite"),
+]
+
+
+def _find_db() -> Path:
+    for p in DB_SEARCH_PATHS:
+        if p.exists():
+            return p
+    print(json.dumps({"error": "database not found", "searched": [str(p) for p in DB_SEARCH_PATHS]}))
+    sys.exit(1)
+
+
+def _connect() -> sqlite3.Connection:
+    conn = sqlite3.connect(str(_find_db()), timeout=5)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA query_only = ON")
+    return conn
+
+
+def emit(obj: dict) -> None:
+    print(json.dumps(obj, default=str))
+
+
+def cmd_status() -> None:
+    conn = _connect()
+    tables = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    ).fetchall()
+    result = {"db_path": str(_find_db()), "tables": {}}
+    for t in tables:
+        name = t["name"]
+        count = conn.execute(f"SELECT COUNT(*) as n FROM [{name}]").fetchone()["n"]
+        result["tables"][name] = count
+    emit(result)
+
+
+def cmd_tables() -> None:
+    conn = _connect()
+    for row in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    ):
+        emit({"table": row["name"]})
+
+
+def cmd_schema(table: str | None = None) -> None:
+    conn = _connect()
+    if table:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone()
+        if row:
+            emit({"table": table, "sql": row["sql"]})
+        else:
+            emit({"error": f"table '{table}' not found"})
+    else:
+        for row in conn.execute(
+            "SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name"
+        ):
+            emit({"table": row["name"], "sql": row["sql"]})
+
+
+def cmd_collections() -> None:
+    conn = _connect()
+    rows = conn.execute(
+        """SELECT collection_name, COUNT(*) as issue_count
+           FROM jira_collection_issues
+           GROUP BY collection_name
+           ORDER BY collection_name"""
+    ).fetchall()
+    for r in rows:
+        emit({"collection": r["collection_name"], "issue_count": r["issue_count"]})
+
+
+def cmd_sql(query: str) -> None:
+    conn = _connect()
+    try:
+        cursor = conn.execute(query)
+        cols = [d[0] for d in cursor.description] if cursor.description else []
+        for row in cursor:
+            emit(dict(zip(cols, row)))
+    except sqlite3.Error as e:
+        emit({"error": str(e), "query": query})
+        sys.exit(1)
+
+
+def cmd_sql_csv(query: str) -> None:
+    conn = _connect()
+    try:
+        cursor = conn.execute(query)
+        cols = [d[0] for d in cursor.description] if cursor.description else []
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(cols)
+        for row in cursor:
+            writer.writerow(row)
+        sys.stdout.write(buf.getvalue())
+    except sqlite3.Error as e:
+        emit({"error": str(e), "query": query})
+        sys.exit(1)
+
+
+COMMANDS = {
+    "status":      ("status", "DB summary with table row counts"),
+    "tables":      ("tables", "List all table names"),
+    "schema":      ("schema [TABLE]", "Show CREATE TABLE DDL"),
+    "collections": ("collections", "List JIRA collections with issue counts"),
+    "sql":         ('sql "QUERY"', "Run read-only SQL, output JSON lines"),
+    "sql-csv":     ('sql-csv "QUERY"', "Run read-only SQL, output CSV"),
+}
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        print("Usage: eng-query <command> [args...]")
+        print()
+        for name, (usage, desc) in COMMANDS.items():
+            print(f"  {usage:<30s}  {desc}")
+        sys.exit(0)
+
+    cmd = args[0]
+    if cmd == "status":
+        cmd_status()
+    elif cmd == "tables":
+        cmd_tables()
+    elif cmd == "schema":
+        cmd_schema(args[1] if len(args) > 1 else None)
+    elif cmd == "collections":
+        cmd_collections()
+    elif cmd == "sql":
+        if len(args) < 2:
+            print("Usage: eng-query sql \"SELECT ...\"", file=sys.stderr)
+            sys.exit(1)
+        cmd_sql(args[1])
+    elif cmd == "sql-csv":
+        if len(args) < 2:
+            print("Usage: eng-query sql-csv \"SELECT ...\"", file=sys.stderr)
+            sys.exit(1)
+        cmd_sql_csv(args[1])
+    else:
+        print(f"Unknown command: {cmd}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

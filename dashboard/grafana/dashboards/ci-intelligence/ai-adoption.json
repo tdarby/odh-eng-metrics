@@ -1,0 +1,251 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    { "title": "Overview", "url": "/d/odh-eng-overview", "type": "link" }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "window",
+        "label": "Time Range",
+        "type": "custom",
+        "query": "last_month, last_3_months, last_6_months, last_year, all_time",
+        "current": {
+          "selected": true,
+          "text": "Last 6 Months",
+          "value": "last_6_months"
+        },
+        "options": [
+          { "text": "Last Month",    "value": "last_month",    "selected": false },
+          { "text": "Last 3 Months", "value": "last_3_months", "selected": false },
+          { "text": "Last 6 Months", "value": "last_6_months", "selected": true },
+          { "text": "Last Year",     "value": "last_year",     "selected": false },
+          { "text": "All Time",      "value": "all_time",      "selected": false }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "AI Adoption — Labeled Commits (Lower Bound)",
+      "type": "text",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Caveats\n\n**This dashboard tracks _labeled_ AI-assisted commits only.** Commits are detected by scanning Git commit messages and bodies for known trailers (e.g. `Co-authored-by: Claude`, `Made-with: Cursor`). This is a **lower bound** — many AI-assisted contributions don't include these markers. Focus on the **trend** (is labeled AI usage growing?) rather than absolute numbers. Absence of a marker does **not** mean AI was not used.\n\nUse the **Time Range** dropdown above to filter all panels to a specific window."
+      }
+    },
+    {
+      "title": "Labeled AI Commits",
+      "description": "Total labeled AI-assisted commits in the selected time window. Deduplicated by commit SHA across upstream and downstream repos. This is a LOWER BOUND — commits without explicit AI markers are not counted.",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_window_total{window=\"$window\"}",
+        "legendFormat": "AI Commits",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 5 },
+              { "color": "yellow", "value": 30 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+    {
+      "title": "AI-Assisted % of PRs",
+      "description": "Percentage of PRs merged to upstream main that had a detectable AI-tool trailer, within the selected time window. This is a LOWER BOUND — many developers use AI without adding trailers.",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_window_pct{window=\"$window\"}",
+        "legendFormat": "AI %",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 5 },
+              { "color": "yellow", "value": 20 },
+              { "color": "orange", "value": 50 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "AI Commits by Tool",
+      "description": "Breakdown of detected AI-tool markers by tool name, within the selected time window. Only tools with established trailer conventions are detected: Claude, Cursor, Copilot, OpenAI/GPT.",
+      "type": "piechart",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_window_by_tool{window=\"$window\"}",
+        "legendFormat": "{{tool}}",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
+        "tooltip": { "mode": "single" },
+        "pieType": "donut"
+      }
+    },
+    {
+      "title": "AI-Assisted vs Other Commits",
+      "description": "Proportion of commits with labeled AI assistance vs those without, in the selected time window. The 'Other' slice includes both purely human commits AND AI-assisted commits that lack explicit trailers. This is a LOWER BOUND for AI usage — the true AI-assisted share is likely larger.",
+      "type": "piechart",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        {
+          "expr": "odh_eng_ai_window_total{window=\"$window\"}",
+          "legendFormat": "AI-Assisted",
+          "refId": "A",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+        },
+        {
+          "expr": "odh_eng_ai_window_non_ai{window=\"$window\"}",
+          "legendFormat": "Other",
+          "refId": "B",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "AI-Assisted" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Other" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "semi-dark-blue", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
+        "tooltip": { "mode": "single" },
+        "pieType": "donut"
+      }
+    },
+    {
+      "title": "Monthly AI-Assisted Commits",
+      "description": "Number of unique labeled AI-assisted commits per calendar month, filtered to the selected time window. This is a LOWER BOUND — the trend direction is more meaningful than absolute values.",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_monthly_commits{window=\"$window\"}",
+        "legendFormat": "{{month}}",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 3 },
+              { "color": "yellow", "value": 10 }
+            ]
+          }
+        }
+      },
+      "options": { "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true }
+    },
+    {
+      "title": "Monthly AI-Assisted % of PRs",
+      "description": "Percentage of PRs merged each month that had a detectable AI-tool trailer, filtered to the selected time window. A rising trend suggests increasing adoption.",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_monthly_pct{window=\"$window\"}",
+        "legendFormat": "{{month}}",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 5 },
+              { "color": "yellow", "value": 15 }
+            ]
+          }
+        }
+      },
+      "options": { "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true }
+    },
+    {
+      "title": "Monthly AI Commits by Tool",
+      "description": "Monthly breakdown of AI-assisted commits by tool (Claude, Cursor, Copilot, OpenAI), filtered to the selected time window. A commit may be counted under multiple tools if it has multiple trailers. Lower bound per tool per month.",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{
+        "expr": "odh_eng_ai_monthly_by_tool{window=\"$window\"}",
+        "legendFormat": "{{month}} — {{tool}}",
+        "refId": "A",
+        "instant": true,
+        "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 2 },
+              { "color": "yellow", "value": 8 }
+            ]
+          }
+        }
+      },
+      "options": { "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["eng-metrics", "ai", "adoption"],
+  "time": { "from": "now-1y", "to": "now" },
+  "title": "AI Adoption",
+  "uid": "odh-ai-adoption",
+  "version": 1
+}

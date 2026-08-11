@@ -1,0 +1,641 @@
+{
+  "uid": "odh-ci-build-detail",
+  "title": "Build Drill-Down",
+  "tags": ["ci", "investigation", "opendatahub", "drill-down"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "time": { "from": "now-90d", "to": "now" },
+  "links": [
+    {
+      "title": "Back to Engineering Intelligence",
+      "url": "/d/eng-intelligence",
+      "type": "link"
+    },
+    {
+      "title": "CI Efficiency",
+      "url": "/d/odh-ci-efficiency",
+      "type": "link"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "build_id",
+        "label": "Build ID",
+        "type": "textbox",
+        "current": { "text": "", "value": "" },
+        "options": [{ "text": "", "value": "", "selected": true }]
+      },
+      {
+        "name": "test_variant",
+        "label": "Test Suite",
+        "type": "textbox",
+        "current": { "text": "", "value": "" },
+        "options": [{ "text": "", "value": "", "selected": true }]
+      },
+      {
+        "name": "test_name",
+        "label": "Test Name",
+        "type": "textbox",
+        "current": { "text": "", "value": "" },
+        "options": [{ "text": "", "value": "", "selected": true }]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "text",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Build Drill-Down\n\nThis dashboard shows git context, cluster health, resource usage, and logs for a specific CI build. It is designed to be opened from the **Engineering Intelligence** dashboard by clicking a Build ID. The variables above are populated automatically from the link.\n\nPanels in the **Cluster Health** and **Workload Health** sections use metrics from the cluster health-check (`metrics_export.go`). These panels will be empty until the health-check is integrated into the CI pipeline."
+      }
+    },
+
+    {
+      "title": "Git Context",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 3 },
+      "collapsed": false
+    },
+    {
+      "type": "text",
+      "title": "PR Git Context",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 4 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Git context for this build** -- enriched from the engineering metrics database. This shows which components the PR touched, whether it was AI-assisted, linked Jira tickets, and whether the PR was later reverted. These fields are populated by `make collect`.\n\n*Jira links open to [Red Hat Jira](https://redhat.atlassian.net/browse/)*"
+      }
+    },
+
+    {
+      "title": "Cluster Health Overview",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
+      "collapsed": false
+    },
+    {
+      "title": "Cluster Healthy",
+      "description": "Overall cluster health status from the health-check. 1 = healthy, 0 = unhealthy.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "UNHEALTHY", "color": "red" }, "1": { "text": "HEALTHY", "color": "green" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background" },
+      "targets": [
+        {
+          "expr": "cluster_healthy{build_id=~\"$build_id\"}",
+          "legendFormat": "Healthy",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Section Health",
+      "description": "Health status of each cluster section (nodes, deployments, pods, events, quotas, operator, DSCI, DSC). 1 = OK, 0 = error.",
+      "type": "table",
+      "gridPos": { "h": 5, "w": 8, "x": 4, "y": 4 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              { "id": "custom.width", "value": 80 },
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "0": { "text": "ERROR", "color": "red" }, "1": { "text": "OK", "color": "green" } } }
+              ]},
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "expr": "section_healthy{build_id=~\"$build_id\"}",
+          "legendFormat": "{{section}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "build_id": true },
+            "renameByName": { "section": "Section", "Value": "Status" }
+          }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Node Conditions",
+      "description": "Active node conditions (Ready, DiskPressure, MemoryPressure, PIDPressure). Only shows conditions with status=true.",
+      "type": "table",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Condition" },
+            "properties": [
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "Ready": { "color": "green" }, "DiskPressure": { "color": "red" }, "MemoryPressure": { "color": "red" }, "PIDPressure": { "color": "red" }, "NetworkUnavailable": { "color": "red" } } }
+              ]},
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "expr": "kube_node_status_condition{build_id=~\"$build_id\", status=\"true\"} == 1",
+          "legendFormat": "{{node}} {{condition}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "build_id": true, "status": true, "Value": true },
+            "renameByName": { "node": "Node", "condition": "Condition" }
+          }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+
+    {
+      "title": "Node Resources",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "collapsed": false
+    },
+    {
+      "title": "Node CPU Usage Over Time",
+      "description": "CPU usage in cores per node from the health-check, with capacity shown as a threshold line.",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "showPoints": "auto" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*capacity.*" },
+            "properties": [
+              { "id": "custom.drawStyle", "value": "line" },
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+              { "id": "custom.fillOpacity", "value": 0 },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "node_cpu_usage_cores{build_id=~\"$build_id\"}",
+          "legendFormat": "{{node}} usage",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+        },
+        {
+          "expr": "kube_node_status_capacity{build_id=~\"$build_id\", resource=\"cpu\"}",
+          "legendFormat": "{{node}} capacity",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Node Memory Usage Over Time",
+      "description": "Working set memory per node from the health-check, with total memory as capacity.",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "showPoints": "auto" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*capacity.*" },
+            "properties": [
+              { "id": "custom.drawStyle", "value": "line" },
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+              { "id": "custom.fillOpacity", "value": 0 },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "container_memory_working_set_bytes{build_id=~\"$build_id\", id=\"/\"}",
+          "legendFormat": "{{node}} usage",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes{build_id=~\"$build_id\"}",
+          "legendFormat": "{{node}} capacity",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+
+    {
+      "title": "Workload Health",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "collapsed": false
+    },
+    {
+      "title": "Deployment Readiness",
+      "description": "Desired vs ready replicas for each deployment. Rows where Ready < Replicas indicate degraded workloads.",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 21 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Ready" },
+            "properties": [
+              { "id": "custom.width", "value": 70 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Replicas" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Ready", "desc": false }] },
+      "targets": [
+        {
+          "expr": "kube_deployment_status_replicas{build_id=~\"$build_id\"}",
+          "legendFormat": "{{namespace}}/{{deployment}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "kube_deployment_status_replicas_ready{build_id=~\"$build_id\"}",
+          "legendFormat": "{{namespace}}/{{deployment}}",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "deployment", "mode": "outer" } },
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "__name__": true, "__name__ 1": true, "__name__ 2": true, "build_id": true, "build_id 1": true, "build_id 2": true, "namespace 2": true },
+          "renameByName": { "namespace 1": "Namespace", "deployment": "Deployment", "Value #A": "Replicas", "Value #B": "Ready" }
+        }}
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Pod Status by Phase",
+      "description": "Count of pods in each phase (Running, Pending, Failed, etc.).",
+      "type": "bargauge",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 21 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failed" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Pending" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Unknown" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+          }
+        ]
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "horizontal", "displayMode": "gradient" },
+      "targets": [
+        {
+          "expr": "count(kube_pod_status_phase{build_id=~\"$build_id\"} == 1) by (phase)",
+          "legendFormat": "{{phase}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Container Restarts",
+      "description": "Containers with the most restarts — indicates crashlooping or instability.",
+      "type": "bargauge",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 21 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "horizontal", "displayMode": "gradient" },
+      "targets": [
+        {
+          "expr": "topk(10, kube_pod_container_status_restarts_total{build_id=~\"$build_id\"} > 0)",
+          "legendFormat": "{{pod}}/{{container}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+    {
+      "title": "Not-Ready Containers",
+      "description": "Containers that are not in ready state. Indicates pods that haven't fully started.",
+      "type": "table",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 26 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Ready" },
+            "properties": [
+              { "id": "custom.width", "value": 70 },
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "0": { "text": "NOT READY", "color": "red" }, "1": { "text": "READY", "color": "green" } } }
+              ]},
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "expr": "kube_pod_container_status_ready{build_id=~\"$build_id\"} == 0",
+          "legendFormat": "{{namespace}}/{{pod}}/{{container}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "build_id": true },
+            "renameByName": { "namespace": "Namespace", "pod": "Pod", "container": "Container", "Value": "Ready" }
+          }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+
+    {
+      "title": "Build Steps",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "collapsed": false
+    },
+    {
+      "title": "CI Step Results",
+      "description": "All CI steps for this build with their status and duration.",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Duration (s)" },
+            "properties": [
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "s" },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 300 }, { "color": "red", "value": 900 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "gradient" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              { "id": "custom.width", "value": 80 },
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "failed": { "text": "FAILED", "color": "red" }, "passed": { "text": "PASSED", "color": "green" } } }
+              ]},
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Status", "desc": true }] },
+      "targets": [
+        {
+          "expr": "last_over_time(ci_junit_step_duration_seconds{build_id=~\"$build_id\"}[$__range])",
+          "legendFormat": "{{step_name}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "org": true, "repo": true, "branch": true, "config_hash": true, "job_name": true, "build_id": true, "pr_number": true, "pr_sha": true },
+            "renameByName": { "step_name": "Step", "status": "Status", "Value": "Duration (s)" }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": { "sort": [{ "field": "Status", "desc": true }] }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" }
+    },
+
+    {
+      "title": "Logs & Failure Messages",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+      "collapsed": false
+    },
+    {
+      "title": "Test Failure Messages",
+      "description": "Failure text from JUnit reports for this build. Shows individual test results with failure messages.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 41 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "targets": [
+        {
+          "expr": "pipeline:\"junit\" AND source:\"junit_test\" AND build_id:\"$build_id\" AND test_variant:\"$test_variant\"",
+          "refId": "A",
+          "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "title": "Test Cluster — K8s Warning Events",
+      "description": "Warning-level K8s events from the test cluster where tests ran.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 51 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "targets": [
+        {
+          "expr": "pipeline:\"build_resources\" AND source:\"k8s_event\" AND scope:\"cluster\" AND build_id:\"$build_id\" AND type:\"Warning\"",
+          "refId": "A",
+          "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "title": "Build Namespace — K8s Warning Events",
+      "description": "Warning-level K8s events from the CI build namespace where ci-operator orchestrates steps.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 51 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "targets": [
+        {
+          "expr": "pipeline:\"build_resources\" AND source:\"k8s_event\" AND scope:\"build\" AND build_id:\"$build_id\" AND type:\"Warning\"",
+          "refId": "A",
+          "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "title": "Test Cluster — Pod Failures & Restarts",
+      "description": "Pods that crashed, restarted, or failed to start on the test cluster.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 61 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "targets": [
+        {
+          "expr": "pipeline:\"build_resources\" AND source:\"k8s_pod\" AND scope:\"cluster\" AND build_id:\"$build_id\" AND _msg:~\"Failed|CrashLoop|Error|restart\"",
+          "refId": "A",
+          "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "title": "CI Operator Errors",
+      "description": "Error-level messages from the ci-operator process.",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 61 },
+      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" },
+      "targets": [
+        {
+          "expr": "pipeline:\"logs\" AND build_id:\"$build_id\" AND level:\"error\"",
+          "refId": "A",
+          "datasource": { "type": "victoriametrics-logs-datasource", "uid": "victorialogs" }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    }
+  ]
+}

@@ -1,0 +1,837 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/odh-eng-overview",
+      "type": "link"
+    }
+  ],
+  "panels": [
+    {
+      "title": "CI Efficiency Summary",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "title": "First-Pass Success Rate",
+      "description": "Percentage of PRs where the first test cycle (all CI jobs) passed without retesting.\n\nHigher is better. A low rate indicates flaky tests or infrastructure instability forcing developers to retest.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.3 },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "green", "value": 0.7 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_first_pass_success_rate{period=\"$period\"}",
+          "legendFormat": "First-pass",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Retest Tax",
+      "description": "Average number of test cycles per PR. An ideal value is 1.0 (every PR passes on the first try).\n\nEach cycle triggers all CI jobs in parallel. Values above 2.0 indicate significant CI instability or test flakiness.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.5 },
+              { "color": "orange", "value": 2.5 },
+              { "color": "red", "value": 4 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_retest_tax{period=\"$period\"}",
+          "legendFormat": "cycles/PR",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Cycle Failure Rate",
+      "description": "Percentage of test cycles that failed (any job in the cycle had a failure).\n\nThis includes infrastructure failures, flaky tests, and genuine regressions. Compare with the DORA Change Failure Rate which only counts production-impacting failures.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.15 },
+              { "color": "orange", "value": 0.3 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_cycle_failure_rate{period=\"$period\"}",
+          "legendFormat": "Failure rate",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Cycle Duration (p50 / p90)",
+      "description": "Median and 90th-percentile test cycle wall-clock duration in minutes.\n\nMeasures how long developers wait for CI feedback per cycle (max of parallel jobs). Long durations compound with retest tax.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 120 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_cycle_duration_p50_minutes{period=\"$period\"}",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_ci_cycle_duration_p90_minutes{period=\"$period\"}",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Totals",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_total_prs_with_ci{period=\"$period\"}",
+          "legendFormat": "PRs with CI data",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_ci_total_cycles{period=\"$period\"}",
+          "legendFormat": "Test cycles",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_ci_total_job_runs{period=\"$period\"}",
+          "legendFormat": "Job runs",
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "CI Hours per PR (p50 / p90)",
+      "description": "Total wall-clock hours a PR spent waiting for CI across all test cycles.\n\nThis is the developer's CI wait budget per PR. Combine with retest tax to identify whether the cost comes from slow cycles or many retries.",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_hours_per_pr_p50{period=\"$period\"}",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_ci_hours_per_pr_p90{period=\"$period\"}",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Monthly CI Health",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "collapsed": false
+    },
+    {
+      "title": "Monthly Cycles & Failures",
+      "description": "Total test cycles and cycle failure count per month. Stacked bars show the proportion of failures.",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 11 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failures" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Cycles" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "month",
+        "stacking": "none",
+        "barWidth": 0.7,
+        "showValue": "never"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_monthly_cycles",
+          "legendFormat": "Cycles",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_ci_monthly_failures",
+          "legendFormat": "Failures",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": { "byField": "month", "mode": "outer" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": { "Value #A": "Cycles", "Value #B": "Failures" }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": { "sort": [{ "field": "month" }] }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Monthly Failure Rate & Retest Tax",
+      "description": "Cycle failure rate (%) and retest tax (cycles per PR) trend over time.\n\nImproving CI health shows as declining failure rate and retest tax converging toward 1.0.",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 11 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failure %" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Retest Tax" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "month",
+        "stacking": "none",
+        "barWidth": 0.7,
+        "showValue": "never"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_monthly_failure_pct",
+          "legendFormat": "Failure %",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_ci_monthly_retest_tax",
+          "legendFormat": "Retest Tax",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": { "byField": "month", "mode": "outer" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": { "Value #A": "Failure %", "Value #B": "Retest Tax" }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": { "sort": [{ "field": "month" }] }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Weekly Pass / Fail Volume",
+      "description": "Stacked bar chart showing passes and failures per week. Visualizes both CI volume and failure proportion over time.",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 19 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "eng-tables" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "http://exporter:9090/api/tables/weekly-pass-fail",
+          "url_options": { "method": "GET" },
+          "parser": "backend",
+          "columns": [
+            { "selector": "week", "text": "Week", "type": "string" },
+            { "selector": "passes", "text": "Passes", "type": "number" },
+            { "selector": "failures", "text": "Failures", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Passes" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Failures" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          }
+        ]
+      },
+      "options": {
+        "xField": "Week",
+        "stacking": "normal",
+        "barWidth": 0.7,
+        "showValue": "never",
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
+      "title": "Failure Rate Trends (%)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "collapsed": false
+    },
+    {
+      "title": "Monthly Cycle Failure Rate (%)",
+      "description": "Percentage of test cycles that failed each month.\n\nShows the long-term trend of CI reliability. A declining line means CI is becoming more stable.\n\nMonths with fewer than 10 cycles are excluded.",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "max": 100,
+          "min": 0,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "orange", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "vertical",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true,
+        "valueMode": "color",
+        "minVizWidth": 8,
+        "minVizHeight": 16,
+        "namePlacement": "auto"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_monthly_failure_pct and odh_eng_ci_monthly_cycles >= 10",
+          "legendFormat": "{{month}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "transformations": [],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Weekly Cycle Failure Rate (%)",
+      "description": "Percentage of test cycles that failed each week.\n\nShows the short-term trend of CI reliability. Useful for spotting regressions or improvements week over week.\n\nWeeks with fewer than 10 cycles are excluded.",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "max": 100,
+          "min": 0,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "orange", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "vertical",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true,
+        "valueMode": "color",
+        "minVizWidth": 8,
+        "minVizHeight": 16,
+        "namePlacement": "auto"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_weekly_failure_pct and odh_eng_ci_weekly_cycles >= 10",
+          "legendFormat": "{{week}}",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "transformations": [],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Failure Trends",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 },
+      "collapsed": false
+    },
+    {
+      "title": "Weekly Cycle Failures Over Time",
+      "description": "Total test cycles and failures per week. Shows whether CI health is trending up or down.\n\nA declining failure count with stable total cycles indicates improving CI reliability.",
+      "type": "barchart",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 37 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failures" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Total cycles" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "week",
+        "stacking": "none",
+        "barWidth": 0.7,
+        "showValue": "never"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_weekly_cycles",
+          "legendFormat": "Total cycles",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_ci_weekly_cycle_failures",
+          "legendFormat": "Failures",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": { "byField": "week", "mode": "outer" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": { "Value #A": "Total cycles", "Value #B": "Failures" }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": { "sort": [{ "field": "week" }] }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Weekly Failures by Test Type",
+      "description": "Job-level failures broken down by test type per week.\n\nIdentifies which tests are the biggest contributors to CI failures and whether specific test types are improving or regressing.\n\nCategories: e2e (ODH e2e), rhoai-e2e, hypershift-e2e, images (all image/mirror jobs), bundles (all bundle/index jobs).",
+      "type": "barchart",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 46 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "rhoai-e2e" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "e2e" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "hypershift-e2e" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "images" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "bundles" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }]
+          }
+        ]
+      },
+      "options": {
+        "xField": "week",
+        "stacking": "normal",
+        "barWidth": 0.7,
+        "showValue": "never",
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (week) (odh_eng_ci_weekly_job_failures{exported_job=~\"opendatahub-operator-e2e|operator-e2e\"})",
+          "legendFormat": "e2e",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "sum by (week) (odh_eng_ci_weekly_job_failures{exported_job=\"opendatahub-operator-rhoai-e2e\"})",
+          "legendFormat": "rhoai-e2e",
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "sum by (week) (odh_eng_ci_weekly_job_failures{exported_job=\"opendatahub-operator-e2e-hypershift\"})",
+          "legendFormat": "hypershift-e2e",
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "sum by (week) (odh_eng_ci_weekly_job_failures{exported_job=~\"images|incubation-images|image-mirror|.*pr-image-mirror\"})",
+          "legendFormat": "images",
+          "refId": "D",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "sum by (week) (odh_eng_ci_weekly_job_failures{exported_job=~\"ci-bundle.*|ci-index\"})",
+          "legendFormat": "bundles",
+          "refId": "E",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": { "byField": "week", "mode": "outer" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value #A": "e2e",
+              "Value #B": "rhoai-e2e",
+              "Value #C": "hypershift-e2e",
+              "Value #D": "images",
+              "Value #E": "bundles"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": { "sort": [{ "field": "week" }] }
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "E2E Test Stability",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 55 },
+      "collapsed": false
+    },
+    {
+      "title": "Broken Tests",
+      "description": "Tests failing in >80% of builds they run in. These are deterministically broken and block CI.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 56 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{ "refId": "A", "expr": "odh_eng_test_stability_broken_count{period=\"all\"}", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 8 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background" }
+    },
+    {
+      "title": "Flaky Tests",
+      "description": "Tests failing in 20-80% of builds. Non-deterministic failures inflating retest tax.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 56 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [{ "refId": "A", "expr": "odh_eng_test_stability_flaky_count{period=\"all\"}", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background" }
+    },
+    {
+      "title": "",
+      "type": "text",
+      "gridPos": { "h": 5, "w": 16, "x": 8, "y": 56 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Deep-dive into test failures\n\nDetailed test-level pass rates, failure messages, and logs are in the **openshift-ci-observability** stack:\n\n**[CI Tests →](/d/ci-tests)** | **[CI Investigation →](/d/ci-investigation)** | **[CI Logs →](/d/ci-logs)** | **[Engineering Intelligence →](/d/eng-intelligence)**"
+      }
+    },
+    {
+      "title": "Top Broken Tests",
+      "description": "Tests with >80% failure rate across all builds. Fix these first — they block CI for every PR that triggers them.",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 61 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "eng-tables" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "http://exporter:9090/api/tables/test-stability",
+          "url_options": { "method": "GET" },
+          "parser": "backend",
+          "columns": [
+            { "selector": "test_name", "text": "Test Name", "type": "string" },
+            { "selector": "category", "text": "Status", "type": "string" },
+            { "selector": "fail_builds", "text": "Failed Builds", "type": "number" },
+            { "selector": "total_builds", "text": "Total Builds", "type": "number" },
+            { "selector": "fail_rate", "text": "Fail Rate", "type": "number" },
+            { "selector": "last_failure", "text": "Last Failure", "type": "string" }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Fail Rate" },
+            "properties": [{ "id": "unit", "value": "percentunit" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "broken": { "text": "BROKEN", "color": "red" } } },
+                  { "type": "value", "options": { "flaky": { "text": "FLAKY", "color": "orange" } } }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Test Name" },
+            "properties": [{ "id": "custom.width", "value": 500 }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Fail Rate", "desc": true }]
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["eng-metrics", "opendatahub", "ci"],
+  "templating": {
+    "list": [
+      {
+        "name": "period",
+        "label": "Time Period",
+        "type": "custom",
+        "query": "1w, 3w, 1m, 3m, 6m, all",
+        "current": {
+          "selected": true,
+          "text": "3 Months",
+          "value": "3m"
+        },
+        "options": [
+          { "text": "Last Week",     "value": "1w",  "selected": false },
+          { "text": "Last 3 Weeks",  "value": "3w",  "selected": false },
+          { "text": "Last Month",    "value": "1m",  "selected": false },
+          { "text": "3 Months",      "value": "3m",  "selected": true },
+          { "text": "6 Months",      "value": "6m",  "selected": false },
+          { "text": "All Time",      "value": "all", "selected": false }
+        ]
+      }
+    ]
+  },
+  "time": { "from": "now-1y", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "CI Efficiency - opendatahub-operator",
+  "uid": "odh-ci-efficiency",
+  "version": 1
+}

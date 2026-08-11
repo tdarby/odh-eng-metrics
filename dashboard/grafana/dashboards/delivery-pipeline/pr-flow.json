@@ -1,0 +1,221 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/odh-eng-overview",
+      "type": "link"
+    }
+  ],
+  "panels": [
+    {
+      "title": "Time to Release Distribution",
+      "description": "How long PRs wait between being merged to main and appearing in a tagged release.\n\nThis histogram shows the distribution across all PRs with tag arrivals. Most PRs should land in the 1-30d range given the ~monthly release cadence. PRs in \">30d\" were batched across multiple release cycles.",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "orange",
+                "value": 100
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_pr_time_to_release_bucket",
+          "legendFormat": "{{bucket}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ]
+    },
+    {
+      "title": "PR Cycle Time Distribution",
+      "description": "Time from a developer's first commit to PR merge, bucketed into ranges.\n\nMeasured using git author date (first commit) vs committer date (merge). Only available for PRs where these dates differ (squash merges with preserved author dates).\n\n- <1h: Quick fixes or trivial changes\n- 1-8h: Same-day turnaround (healthy)\n- 8-24h: Next-day merge\n- 1-3d: Normal review cycle\n- >1w: Long-running feature branches or stalled PRs",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 3
+              },
+              {
+                "color": "orange",
+                "value": 8
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_pr_cycle_time_bucket",
+          "legendFormat": "{{bucket}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ]
+    },
+    {
+      "title": "Batch Size per Release",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false
+    },
+    {
+      "title": "PRs per Release (batch size)",
+      "description": "How many PRs are bundled into each release. Larger batches mean more changes ship together, which increases risk but reduces release overhead. Smaller batches mean more frequent, lower-risk releases.\n\nThis reuses the per-release PR count from the Overview dashboard.",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "orange",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_pr_count",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "eng-metrics",
+    "opendatahub",
+    "pr-flow"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "PR Flow and Batch Size",
+  "uid": "odh-eng-pr-flow",
+  "version": 1
+}

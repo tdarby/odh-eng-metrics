@@ -1,0 +1,108 @@
+upstream:
+  owner: opendatahub-io
+  repo: opendatahub-operator
+  clone_url: https://github.com/opendatahub-io/opendatahub-operator.git
+  branches:
+    main: main
+    stable: stable
+    downstream_staging: rhoai
+  tags:
+    release_pattern: 'v\d+\.\d+\.\d+$'
+    ea_pattern: 'v\d+\.\d+\.\d+-ea\.\d+$'
+    patch_pattern: 'v\d+\.\d+\.[1-9]\d*$'
+
+downstream:
+  owner: red-hat-data-services
+  repo: rhods-operator
+  clone_url: https://github.com/red-hat-data-services/rhods-operator.git
+  branches:
+    main: main
+    release_pattern: 'rhoai-\d+\.\d+$'
+    ea_pattern: 'rhoai-\d+\.\d+-ea\.\d+$'
+  bot_pr_prefixes:
+    - "chore(deps):"
+
+jira:
+  enabled: true
+  base_url: https://redhat.atlassian.net
+  project: RHOAIENG
+  issue_pattern: 'RHOAIENG-\d+'
+  # story_points_field: customfield_12310243
+  # epic_link_field: customfield_12311140
+  collections:
+    - name: ai-bug-bash
+      projects:
+        - RHOAIENG
+        - AIPCC
+        - RHAIENG
+        - INFERENG
+      # Map JIRA projects to GitHub repos for AgentReady assessments.
+      # Leave a project out or use an empty list to skip it.
+      project_repos:
+        RHOAIENG:
+          - https://github.com/opendatahub-io/opendatahub-operator
+          - https://github.com/opendatahub-io/odh-dashboard
+          - https://github.com/opendatahub-io/kserve
+          - https://github.com/opendatahub-io/odh-model-controller
+          - https://github.com/opendatahub-io/data-science-pipelines-operator
+          - https://github.com/opendatahub-io/kubeflow
+          - https://github.com/opendatahub-io/kuberay
+          - https://github.com/opendatahub-io/trustyai-service-operator
+          - https://github.com/opendatahub-io/model-registry-operator
+          - https://github.com/opendatahub-io/training-operator
+          - https://github.com/opendatahub-io/feast
+          - https://github.com/opendatahub-io/trainer
+          - https://github.com/opendatahub-io/maas-billing
+          - https://github.com/opendatahub-io/mlflow-operator
+          - https://github.com/opendatahub-io/spark-operator
+          - https://github.com/opendatahub-io/workload-variant-autoscaler
+        AIPCC:
+          - https://github.com/python-wheel-build/fromager
+          - https://github.com/opendatahub-io/notebooks
+          - https://github.com/opendatahub-io/base-containers
+        RHAIENG:
+          - https://github.com/opendatahub-io/notebooks
+          - https://github.com/opendatahub-io/llama-stack-k8s-operator
+          - https://github.com/opendatahub-io/llama-stack-distribution
+        INFERENG:
+          - https://github.com/llm-d/llm-d
+          - https://github.com/llm-d/llm-d-inference-scheduler
+          - https://github.com/vllm-project/vllm
+      # Total bug population in the backlog when the bash started (no ai-* label required).
+      # Used as the "Total Issues" denominator in the deep analysis report.
+      baseline_jql: >-
+        project in ("Red Hat OpenShift AI Engineering", "AI Platform Core Components",
+        "Red Hat AI Engineering", "Inference Engineering Project")
+        and issuetype = Bug and created <= 2026-03-22
+        and (status in (New, Backlog, Refinement, "To Do")
+        or status changed from (New, Backlog, Refinement, "To Do") after 2026-03-22)
+      labels:
+        - ai-triaged
+        - ai-fixable
+        - ai-nonfixable
+        - ai-fully-automated
+        - ai-accelerated-fix
+        - ai-could-not-fix
+        - ai-verification-failed
+        - regressions-found
+      analyzer: bug-bash
+      description: "AI Bug Bash — March 22-29 2026"
+
+per_release:
+  min_version: "3.0.0"
+
+ci_observability:
+  enabled: true
+  vm_url: http://localhost:8428
+  vl_url: http://localhost:9428
+  grafana_url: http://localhost:3000  # CI Observability Grafana (for report links)
+  collect_steps: true
+  collect_failure_messages: true
+  ingest_wait: 180  # seconds to wait for scraper to ingest data on first run
+  # project_dir is used by the Makefile (CI_OBS_DIR variable), not Python.
+  # Override via: make collect CI_OBS_DIR=/path/to/openshift-ci-observability
+
+collection:
+  lookback_days: 365
+  data_dir: data
+  cache_db: data/eng-metrics.sqlite

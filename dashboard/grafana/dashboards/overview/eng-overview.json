@@ -1,0 +1,1706 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "Throughput Over Time",
+      "url": "/d/odh-eng-throughput",
+      "type": "link"
+    },
+    {
+      "title": "Failure Analysis",
+      "url": "/d/odh-eng-failures",
+      "type": "link"
+    },
+    {
+      "title": "PR Flow",
+      "url": "/d/odh-eng-pr-flow",
+      "type": "link"
+    },
+    {
+      "title": "Pipeline Velocity",
+      "url": "/d/odh-eng-pipeline",
+      "type": "link"
+    },
+    {
+      "title": "AI Adoption",
+      "url": "/d/odh-ai-adoption",
+      "type": "link"
+    },
+    {
+      "title": "CI Efficiency",
+      "url": "/d/odh-ci-efficiency",
+      "type": "link"
+    }
+  ],
+  "panels": [
+    {
+      "title": "Engineering Metrics Summary",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 7
+              },
+              {
+                "color": "yellow",
+                "value": 14
+              },
+              {
+                "color": "green",
+                "value": 21
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_deployment_frequency_release_gap_days",
+          "legendFormat": "Release Gap (days)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_lead_time_pr_cycle_p50_hours",
+          "legendFormat": "Lead Time p50 (hours)",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_change_failure_rate * 100",
+          "legendFormat": "Failure Rate (%)",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_mttr_patch_turnaround_p50_hours",
+          "legendFormat": "MTTR p50 (hours)",
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "The four key DORA metrics at a glance, aggregated across all releases in the lookback window (1 year).\n\n- **Release Gap**: Average days between upstream v*.*.* tags. Lower = more frequent delivery.\n- **Lead Time p50**: Median hours from a developer's first commit to PR merge. Measures development velocity.\n- **Failure Rate**: Percentage of merged PRs that led to a failure signal (patch release, revert, or downstream cherry-pick).\n- **MTTR p50**: Median hours from a broken release (.0) to its hotfix patch (.1/.2). Only shown when patch releases exist."
+    },
+    {
+      "title": "Deployment Frequency",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "collapsed": false
+    },
+    {
+      "title": "Releases Over Time",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 5
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_deployment_frequency_releases_total",
+          "legendFormat": "Total Releases",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Total number of upstream git tags matching v*.*.* in the lookback window.\n\nEach tag represents a formal release cut by the team. Includes stable (.0) and patch (.1+) releases but not EA builds."
+    },
+    {
+      "title": "PR Merges to Main",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 5
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_deployment_frequency_pr_merges_total",
+          "legendFormat": "Total PRs Merged",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Total pull requests merged to the upstream main branch in the lookback window.\n\nThis is the most granular measure of delivery throughput \u2014 every merged PR is a unit of change entering the integration branch."
+    },
+    {
+      "title": "Avg Days Between Releases",
+      "type": "gauge",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 60,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 7
+              },
+              {
+                "color": "orange",
+                "value": 14
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "d"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_deployment_frequency_release_gap_days",
+          "legendFormat": "Avg Gap",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Mean calendar days between consecutive upstream release tags.\n\nDORA bands: Elite < 1 day, High < 7 days, Medium < 30 days, Low > 30 days.\nThis measures how often the team cuts a formal release, which is the best available proxy for production deployment frequency."
+    },
+    {
+      "title": "Lead Time for Changes",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "collapsed": false
+    },
+    {
+      "title": "PR Cycle Time",
+      "type": "gauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 500,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 24
+              },
+              {
+                "color": "orange",
+                "value": 72
+              },
+              {
+                "color": "red",
+                "value": 168
+              }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_lead_time_pr_cycle_p50_hours",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_lead_time_pr_cycle_p90_hours",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Time from a developer's first commit on a PR branch to when the PR is merged to main.\n\nMeasured by comparing the git author date (preserved from the first commit on the topic branch in squash merges) to the committer date (set at merge time). Shows p50 (median) and p90 (worst-case).\n\nGreen < 24h | Yellow < 72h | Orange < 168h (1 week) | Red > 168h"
+    },
+    {
+      "title": "PR Review Time",
+      "type": "gauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 300,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "orange",
+                "value": 48
+              },
+              {
+                "color": "red",
+                "value": 96
+              }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_lead_time_pr_review_p50_hours",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_lead_time_pr_review_p90_hours",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Time from PR creation to merge. In the git-only measurement, this is identical to cycle time since the PR open date is not available without the GitHub API.\n\nShows p50 (median) and p90 (worst-case)."
+    },
+    {
+      "title": "Merge to Release",
+      "type": "gauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1500,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 168
+              },
+              {
+                "color": "orange",
+                "value": 504
+              },
+              {
+                "color": "red",
+                "value": 720
+              }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_lead_time_to_release_p50_hours",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_lead_time_to_release_p90_hours",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Time from when a PR is merged to main until it appears in a tagged release (v*.*.*).\n\nMeasured by finding the earliest git tag containing each merge commit. This captures how long changes sit in the integration branch before being shipped.\n\nGreen < 7d | Yellow < 21d | Orange < 30d | Red > 30d"
+    },
+    {
+      "title": "Change Failure Rate",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "collapsed": false,
+      "description": "Percentage of total merged PRs that resulted in a failure signal.\n\nFormula: (patch releases + reverts on main + downstream branches with cherry-picks) / total PRs merged to main.\n\nDORA bands: Elite < 5%, High < 10%, Medium < 15%, Low > 15%.\nA low rate means most changes ship without causing production issues."
+    },
+    {
+      "title": "Change Failure Rate (Trend)",
+      "type": "gauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 0.5,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.05
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.15
+              }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_change_failure_rate",
+          "legendFormat": "CFR",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Percentage of total merged PRs that resulted in a failure signal.\n\nFormula: (patch releases + reverts on main + downstream branches with cherry-picks) / total PRs merged to main.\n\nDORA bands: Elite < 5%, High < 10%, Medium < 15%, Low > 15%.\nA low rate means most changes ship without causing production issues."
+    },
+    {
+      "title": "Failure Event Breakdown",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 8,
+        "y": 20
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_change_failure_patch_releases",
+          "legendFormat": "Patch Releases",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_change_failure_reverts",
+          "legendFormat": "Reverts on Main",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_change_failure_cherry_picks",
+          "legendFormat": "Human Cherry-picks",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Count of each type of failure signal detected in the lookback window.\n\n- **Patch Releases**: v*.*.1+ tags indicating a hotfix was needed after a .0 release.\n- **Reverts on Main**: Commits matching \"Revert \"...\"\" on upstream main, meaning a merged PR was rolled back.\n- **Human Cherry-picks**: Commits on frozen downstream rhoai-x.y branches with \"(cherry picked from commit ...)\" markers, indicating out-of-band production fixes."
+    },
+    {
+      "title": "Mean Time to Recovery",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "collapsed": false
+    },
+    {
+      "title": "Patch Release Turnaround",
+      "type": "gauge",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 168,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 24
+              },
+              {
+                "color": "red",
+                "value": 72
+              }
+            ]
+          },
+          "unit": "h"
+        }
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_mttr_patch_turnaround_p50_hours",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_mttr_patch_turnaround_p90_hours",
+          "legendFormat": "p90",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Hours from a base release (.0 tag) to its first patch release (.1 tag).\n\nThis measures how quickly the team can ship a hotfix once a problem is identified in a release. Shows p50 (median) and p90 (worst-case) across all patch releases in the lookback window.\n\nGreen < 1h | Yellow < 24h | Orange < 72h (3d) | Red > 72h"
+    },
+    {
+      "title": "Recovery Metrics Summary",
+      "type": "stat",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_change_failure_patch_releases",
+          "legendFormat": "Patch Releases",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_change_failure_reverts",
+          "legendFormat": "Reverts",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        },
+        {
+          "expr": "odh_eng_change_failure_cherry_picks",
+          "legendFormat": "Cherry-picks",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Summary counts of failure signals that required recovery action.\n\n- **Patch Releases**: Number of hotfix releases shipped.\n- **Reverts**: PRs rolled back on main.\n- **Cherry-picks**: Out-of-band fixes applied to downstream release branches."
+    },
+    {
+      "title": "Per-Release Detail (v3.x+)",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 35
+      },
+      "collapsed": false
+    },
+    {
+      "title": "PRs in Release",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 36
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_pr_count{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Number of PRs included in each release, determined by finding the earliest release tag containing each PR's merge commit.\n\nA higher count means more changes were batched into a single release. Use the Release dropdown to filter to a specific release."
+    },
+    {
+      "title": "Release Cadence (days)",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 6,
+        "y": 36
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "d",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 21
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 42
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_days_since_previous{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Days between this release and the previous one.\n\nMeasures how frequently the team ships. Consistent cadence suggests a mature release process. Large gaps may indicate blockers or scope creep.\n\nGreen < 21d | Yellow < 30d | Orange < 42d | Red > 42d"
+    },
+    {
+      "title": "Lead Time p50 (merge to release)",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 36
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 168
+              },
+              {
+                "color": "orange",
+                "value": 504
+              },
+              {
+                "color": "red",
+                "value": 720
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_lead_time_p50_hours{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Median hours from PR merge to the release tag date, per release.\n\nShows how long the typical PR sits in the integration branch before being released. Higher values mean PRs are batched longer before a release is cut."
+    },
+    {
+      "title": "Cherry-picks (downstream hotfixes)",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 18,
+        "y": 36
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 3
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_cherry_picks{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Number of cherry-pick commits on the corresponding downstream rhoai-x.y branch.\n\nCherry-picks to frozen release branches indicate production-blocking issues that required out-of-band fixes. High counts suggest the release had quality problems after being shipped downstream."
+    },
+    {
+      "title": "PR Cycle Time p50 (1st commit to merge)",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 43
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 24
+              },
+              {
+                "color": "orange",
+                "value": 72
+              },
+              {
+                "color": "red",
+                "value": 168
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_cycle_time_p50_hours{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Median hours from first commit to PR merge, per release.\n\nMeasures development velocity for the PRs in each release. Lower values mean faster iteration cycles. Note: only available for PRs where git author date differs from committer date (squash merges with preserved dates)."
+    },
+    {
+      "title": "Lead Time p90 (merge to release)",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 43
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 336
+              },
+              {
+                "color": "orange",
+                "value": 672
+              },
+              {
+                "color": "red",
+                "value": 1008
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_lead_time_p90_hours{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "The 90th percentile (worst-case) hours from PR merge to release tag date, per release.\n\nShows the \"long tail\" \u2014 the slowest PRs that were batched into this release. A large gap between p50 and p90 indicates some PRs waited much longer than average."
+    },
+    {
+      "title": "Needed Patch Release?",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 43
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "No"
+                },
+                "1": {
+                  "text": "Yes"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_release_has_patch{release=~\"$release\"}",
+          "legendFormat": "{{release}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true
+        }
+      ],
+      "description": "Whether this release required a subsequent patch release (v*.*.1 or higher).\n\nYes (red) = the .0 release had a critical bug requiring a hotfix.\nNo (green) = the release shipped clean with no follow-up patches needed."
+    },
+    {
+      "title": "Release Quality Heatmap",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "collapsed": false
+    },
+    {
+      "title": "Release Quality Comparison",
+      "description": "Side-by-side comparison of all v3.x+ releases across quality dimensions. Each bar represents one metric for all releases, making it easy to spot which releases had issues (high cherry-picks, long lead times) vs clean releases.",
+      "type": "table",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "release"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #PRs"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "PRs"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #Cadence"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Cadence (d)"
+              },
+              {
+                "id": "unit",
+                "value": "d"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #LeadP50"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lead p50 (h)"
+              },
+              {
+                "id": "unit",
+                "value": "h"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 336
+                    },
+                    {
+                      "color": "orange",
+                      "value": 504
+                    },
+                    {
+                      "color": "red",
+                      "value": 720
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #CycleP50"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Cycle p50 (h)"
+              },
+              {
+                "id": "unit",
+                "value": "h"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 24
+                    },
+                    {
+                      "color": "orange",
+                      "value": 72
+                    },
+                    {
+                      "color": "red",
+                      "value": 168
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #Cherry"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Cherry-picks"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 3
+                    },
+                    {
+                      "color": "orange",
+                      "value": 10
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #Patch"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Patch?"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "text": "No"
+                      },
+                      "1": {
+                        "text": "Yes"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "footer": {
+          "enablePagination": false
+        },
+        "showHeader": true
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "release",
+            "mode": "outer"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "odh_eng_release_pr_count",
+          "legendFormat": "{{release}}",
+          "refId": "PRs",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_release_days_since_previous",
+          "legendFormat": "{{release}}",
+          "refId": "Cadence",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_release_lead_time_p50_hours",
+          "legendFormat": "{{release}}",
+          "refId": "LeadP50",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_release_cycle_time_p50_hours",
+          "legendFormat": "{{release}}",
+          "refId": "CycleP50",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_release_cherry_picks",
+          "legendFormat": "{{release}}",
+          "refId": "Cherry",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "expr": "odh_eng_release_has_patch",
+          "legendFormat": "{{release}}",
+          "refId": "Patch",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "instant": true,
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "title": "CI Efficiency (from CI Observability)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 61 },
+      "collapsed": false
+    },
+    {
+      "title": "First-Pass Success",
+      "description": "Percentage of PRs whose first CI build passed. Data from the CI Observability stack (VictoriaMetrics). See the CI Efficiency dashboard for full detail.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 62 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.3 },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "green", "value": 0.7 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_first_pass_success_rate{period=\"all\"}",
+          "legendFormat": "First-pass",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Retest Tax (cycles/PR)",
+      "description": "Average test cycles per PR. Ideal = 1.0. Higher values mean retests from flaky tests or infrastructure issues.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 62 },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.5 },
+              { "color": "orange", "value": 2.5 },
+              { "color": "red", "value": 4 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_retest_tax{period=\"all\"}",
+          "legendFormat": "cycles/PR",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Cycle Failure Rate",
+      "description": "Percentage of test cycles that failed (any job in the cycle had a failure). Includes infra failures, flakes, and genuine regressions.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 62 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.15 },
+              { "color": "orange", "value": 0.3 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_cycle_failure_rate{period=\"all\"}",
+          "legendFormat": "Failure rate",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    },
+    {
+      "title": "Cycle Duration p50",
+      "description": "Median test cycle wall-clock duration in minutes. How long developers wait for CI feedback per cycle.",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 62 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 120 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "expr": "odh_eng_ci_cycle_duration_p50_minutes{period=\"all\"}",
+          "legendFormat": "p50",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "instant": true
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "eng-metrics",
+    "opendatahub"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "release",
+        "label": "Release",
+        "type": "query",
+        "query": "label_values(odh_eng_release_pr_count, release)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "sort": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 1,
+        "multi": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "DORA Metrics - opendatahub-operator",
+  "uid": "odh-eng-overview",
+  "version": 1
+}
