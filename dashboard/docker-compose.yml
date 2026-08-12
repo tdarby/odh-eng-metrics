@@ -6,7 +6,7 @@ networks:
 
 services:
   exporter:
-    image: python:3.12-slim
+    image: docker.io/library/python:3.12-slim
     working_dir: /app
     command: >-
       sh -c "apt-get update -qq && apt-get install -y -qq git >/dev/null 2>&1
@@ -15,7 +15,7 @@ services:
       - ..:/app:z
 
   prometheus:
-    image: prom/prometheus:v2.53.3
+    image: docker.io/prom/prometheus:v2.53.3
     ports:
       - "9091:9090"
     volumes:
@@ -24,7 +24,7 @@ services:
       - exporter
 
   grafana:
-    image: grafana/grafana:11.4.0
+    image: docker.io/grafana/grafana:11.4.0
     ports:
       - "3001:3000"
     networks:
