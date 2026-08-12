@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from metrics.per_release import _parse_version, _tag_to_downstream
+from metrics.per_release import _parse_version, _tag_to_downstream_candidates
 from store.db import Store
 
 
@@ -46,7 +46,8 @@ def compute(store: Store, min_version: str = "3.0.0") -> list[dict]:
     for rel in eligible:
         tag = rel["tag"]
         published = rel["published"]
-        downstream_name = _tag_to_downstream(tag)
+        candidates = _tag_to_downstream_candidates(tag)
+        downstream_name = next((c for c in candidates if c in downstream_branches), candidates[0])
 
         # Find earliest PR merge date for PRs in this release
         release_prs = [pr for pr in all_prs if pr_to_tag.get(pr["number"]) == tag]
