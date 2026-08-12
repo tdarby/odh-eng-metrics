@@ -31,19 +31,20 @@ def _percentiles(values: list[float], pcts: tuple = (50, 90)) -> dict[str, float
     return result
 
 
-def _tag_to_downstream(tag: str) -> str:
-    """Derive the downstream branch name from an upstream tag.
+def _tag_to_downstream_candidates(tag: str) -> list[str]:
+    """Return all plausible downstream branch names for an upstream tag.
 
-    v3.5.0       -> 3.5 GA RHOAI RELEASE
-    v3.4.0-ea.1  -> rhoai-3.4-ea.1  (EA branch format TBD)
+    GA:  v3.5.0   -> ["3.5 GA RHOAI RELEASE"]
+    EA:  v3.4.0-ea.1 -> ["3.4 EA1 RHOAI RELEASE",   # new format (mid-2026+)
+                          "rhoai-3.4-ea.1"]           # old format (historical)
     """
     stripped = tag.lstrip("v")
-    if "-" in stripped:
-        base, suffix = stripped.split("-", 1)
+    if "-ea." in stripped:
+        base, ea_num = stripped.split("-ea.", 1)
         ver = base.rsplit(".", 1)[0]
-        return f"rhoai-{ver}-{suffix}"
+        return [f"{ver} EA{ea_num} RHOAI RELEASE", f"rhoai-{ver}-ea.{ea_num}"]
     ver = stripped.rsplit(".", 1)[0]
-    return f"{ver} GA RHOAI RELEASE"
+    return [f"{ver} GA RHOAI RELEASE"]
 
 
 def _parse_version(tag: str) -> tuple:
@@ -101,7 +102,8 @@ def compute(store: Store, min_version: str = "3.0.0") -> list[dict]:
     for i, rel in enumerate(eligible):
         tag = rel["tag"]
         published = rel["published"]
-        downstream_name = _tag_to_downstream(tag)
+        candidates = _tag_to_downstream_candidates(tag)
+        downstream_name = next((c for c in candidates if c in downstream_branches), candidates[0])
         has_downstream = downstream_name in downstream_branches
 
         # PRs in this release

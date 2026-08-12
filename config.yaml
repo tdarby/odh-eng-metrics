@@ -18,7 +18,7 @@ downstream:
   branches:
     main: main
     release_pattern: '\d+\.\d+ GA RHOAI RELEASE$'
-    ea_pattern: 'rhoai-\d+\.\d+-ea\.\d+$'  # EA branch format TBD — update if naming changed
+    ea_pattern: '(?:rhoai-\d+\.\d+-ea\.\d+|\d+\.\d+ EA\d+ RHOAI RELEASE)$'
   bot_pr_prefixes:
     - "chore(deps):"
 
