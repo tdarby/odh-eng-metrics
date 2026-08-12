@@ -34,8 +34,8 @@ def _percentiles(values: list[float], pcts: tuple = (50, 90)) -> dict[str, float
 def _tag_to_downstream(tag: str) -> str:
     """Derive the downstream branch name from an upstream tag.
 
-    v3.3.0       -> rhoai-3.3
-    v3.4.0-ea.1  -> rhoai-3.4-ea.1
+    v3.5.0       -> 3.5 GA RHOAI RELEASE
+    v3.4.0-ea.1  -> rhoai-3.4-ea.1  (EA branch format TBD)
     """
     stripped = tag.lstrip("v")
     if "-" in stripped:
@@ -43,7 +43,7 @@ def _tag_to_downstream(tag: str) -> str:
         ver = base.rsplit(".", 1)[0]
         return f"rhoai-{ver}-{suffix}"
     ver = stripped.rsplit(".", 1)[0]
-    return f"rhoai-{ver}"
+    return f"{ver} GA RHOAI RELEASE"
 
 
 def _parse_version(tag: str) -> tuple:

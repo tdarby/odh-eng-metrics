@@ -91,7 +91,7 @@ def collect_downstream_branches(
     downstream_repo: git.Repo,
     cfg: dict,
 ) -> int:
-    """Enumerate rhoai-x.y branches from the local bare clone."""
+    """Enumerate downstream release branches (e.g. '3.5 GA RHOAI RELEASE') from the local bare clone."""
     branch_cfg = cfg["downstream"]["branches"]
     release_re = re.compile(branch_cfg["release_pattern"])
     ea_re = re.compile(branch_cfg.get("ea_pattern", "$^"))

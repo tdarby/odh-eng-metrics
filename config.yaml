@@ -17,8 +17,8 @@ downstream:
   clone_url: https://github.com/red-hat-data-services/rhods-operator.git
   branches:
     main: main
-    release_pattern: 'rhoai-\d+\.\d+$'
-    ea_pattern: 'rhoai-\d+\.\d+-ea\.\d+$'
+    release_pattern: '\d+\.\d+ GA RHOAI RELEASE$'
+    ea_pattern: 'rhoai-\d+\.\d+-ea\.\d+$'  # EA branch format TBD — update if naming changed
   bot_pr_prefixes:
     - "chore(deps):"
 
