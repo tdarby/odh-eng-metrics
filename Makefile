@@ -9,7 +9,7 @@ COMPOSE ?= $(shell command -v podman-compose >/dev/null 2>&1 && echo "podman-com
 
 # Path to the openshift-ci-observability checkout.
 # Override via env, local.mk, or: make collect CI_OBS_DIR=/path/to/repo
-CI_OBS_DIR ?= $(HOME)/git/openshift-ci-observability
+CI_OBS_DIR ?= $(HOME)/repos/openshift-ci-observability
 
 -include local.mk
 
